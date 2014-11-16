@@ -4,12 +4,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-  "encoding/json"
 
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/Bowery/gopackages/requests"
@@ -90,27 +90,27 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 		})
 		return
 	}
-  languages := map[string]interface{}{}
-  if err := json.Unmarshal(linguistOut, &languages); err != nil {
-    renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
-      "status": requests.STATUS_FAILED,
-      "error":  err.Error(),
-    })
-    return
-  }
+	languages := map[string]interface{}{}
+	if err := json.Unmarshal(linguistOut, &languages); err != nil {
+		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
+			"status": requests.STATUS_FAILED,
+			"error":  err.Error(),
+		})
+		return
+	}
 
-  cmds := &Commands{}
-  for language, weight := range languages {
-    lc := LanguageToCommands[language]
-    if lc == nil {
-      fmt.Println(language, "is not currently supported")
-      break
-    }
-    fmt.Println(language, "-", weight)
-    cmds.Start += lc.Start + "\n"
-    cmds.Build += lc.Build + "\n"
-    cmds.Init += lc.Init + "\n"
-  }
+	cmds := &Commands{}
+	for language, weight := range languages {
+		lc := LanguageToCommands[language]
+		if lc == nil {
+			fmt.Println(language, "is not currently supported")
+			break
+		}
+		fmt.Println(language, "-", weight)
+		cmds.Start += lc.Start + "\n"
+		cmds.Build += lc.Build + "\n"
+		cmds.Init += lc.Init + "\n"
+	}
 
 	renderer.JSON(rw, http.StatusOK, map[string]interface{}{
 		"status":   requests.STATUS_SUCCESS,
