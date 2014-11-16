@@ -9,6 +9,12 @@ if ARGV.empty?
   abort("repo path must be specified as cli argument")
 end
 
+# Create Git Repo (linguist requires it)
+`cd #{ARGV.at(0)} && git init .`
+`cd #{ARGV.at(0)} && git add --all`
+`cd #{ARGV.at(0)} && git commit -m "init"`
+
+# Get languages from linguist
 repo = Rugged::Repository.new(ARGV.at(0))
 project = Linguist::Repository.new(repo, repo.head.target_id)
 puts JSON.generate(project.languages)       #=> "Ruby"

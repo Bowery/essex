@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+  "encoding/json"
 
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/Bowery/gopackages/requests"
@@ -34,6 +36,14 @@ type Commands struct {
 	Init  string `json:"init"`
 }
 
+var LanguageToCommands = map[string]*Commands{
+	"JavaScript": &Commands{
+		Start: "npm start",
+		Build: "npm install",
+		Init:  "apt-get install -y nodejs",
+	},
+}
+
 func HelloHandler(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(rw, "Bowery Code Analyzer")
 }
@@ -56,7 +66,6 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	analysisPath := filepath.Join(os.Getenv(sys.HomeVar), ".mercer", uuid.New())
 
 	if err = os.MkdirAll(analysisPath, os.ModePerm|os.ModeDir); err != nil {
-		fmt.Println("$$$$ error creating tmp dir", err.Error())
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
@@ -65,18 +74,44 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := tar.Untar(tarball, analysisPath); err != nil {
-		fmt.Println("$$$$ error unziping", err.Error())
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
 		})
 		return
 	}
-	cmds := &Commands{
-		Start: "npm start",
-		Build: "npm install",
-		Init:  "apt-get install -y nodejs",
+
+	linguistPath, _ := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "classifiers/language"))
+	linguistOut, err := exec.Command(linguistPath, analysisPath).Output()
+	if err != nil {
+		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
+			"status": requests.STATUS_FAILED,
+			"error":  err.Error(),
+		})
+		return
 	}
+  languages := map[string]interface{}{}
+  if err := json.Unmarshal(linguistOut, &languages); err != nil {
+    renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
+      "status": requests.STATUS_FAILED,
+      "error":  err.Error(),
+    })
+    return
+  }
+
+  cmds := &Commands{}
+  for language, weight := range languages {
+    lc := LanguageToCommands[language]
+    if lc == nil {
+      fmt.Println(language, "is not currently supported")
+      break
+    }
+    fmt.Println(language, "-", weight)
+    cmds.Start += lc.Start + "\n"
+    cmds.Build += lc.Build + "\n"
+    cmds.Init += lc.Init + "\n"
+  }
+
 	renderer.JSON(rw, http.StatusOK, map[string]interface{}{
 		"status":   requests.STATUS_SUCCESS,
 		"commands": cmds,
