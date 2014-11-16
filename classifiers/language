@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'rugged'
+require 'linguist'
+require 'json'
+
+
+if ARGV.empty?
+  abort("repo path must be specified as cli argument")
+end
+
+repo = Rugged::Repository.new(ARGV.at(0))
+project = Linguist::Repository.new(repo, repo.head.target_id)
+puts JSON.generate(project.languages)       #=> "Ruby"
