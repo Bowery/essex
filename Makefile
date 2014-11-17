@@ -1,12 +1,12 @@
 DEPS = $(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 
 all: deps format
-	@go get -d
 	@go build
 	./mercer
 
 deps:
 	@echo "--> Installing build dependencies"
+	@cd classifiers && bundle install
 	@go get -d -v ./...
 	@echo $(DEPS) | xargs -n1 go get -d
 
