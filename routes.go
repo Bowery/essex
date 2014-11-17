@@ -19,10 +19,10 @@ import (
 	"github.com/unrolled/render"
 )
 
-var Routes = []web.Route{
-	{"GET", "/", HelloHandler, false},
-	{"GET", "/healthz", HealthzHandler, false},
-	{"POST", "/code", AnalyzeCodeHandler, false},
+var routes = []web.Route{
+	{"GET", "/", helloHandler, false},
+	{"GET", "/healthz", healthzHandler, false},
+	{"POST", "/code", analyzeCodeHandler, false},
 }
 
 var renderer = render.New(render.Options{
@@ -30,29 +30,29 @@ var renderer = render.New(render.Options{
 	IsDevelopment: true,
 })
 
-type Commands struct {
+type commands struct {
 	Start string `json:"start"`
 	Build string `json:"build"`
 	Init  string `json:"init"`
 }
 
-var LanguageToCommands = map[string]*Commands{
-	"JavaScript": &Commands{
+var languageToCommands = map[string]*commands{
+	"JavaScript": &commands{
 		Start: "npm start",
 		Build: "npm install",
 		Init:  "apt-get install -y nodejs",
 	},
 }
 
-func HelloHandler(rw http.ResponseWriter, req *http.Request) {
+func helloHandler(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(rw, "Bowery Code Analyzer")
 }
 
-func HealthzHandler(rw http.ResponseWriter, req *http.Request) {
+func healthzHandler(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(rw, "ok")
 }
 
-func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
+func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	tarball, _, err := req.FormFile("file")
 	if err != nil {
 		renderer.JSON(rw, http.StatusBadRequest, map[string]string{
@@ -100,10 +100,10 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cmds := &Commands{}
+	cmds := &commands{}
 	for language, weight := range languages {
 		fmt.Println(language, "-", weight)
-		lc := LanguageToCommands[language]
+		lc := languageToCommands[language]
 		if lc != nil {
 			cmds.Start += lc.Start + "\n"
 			cmds.Build += lc.Build + "\n"
