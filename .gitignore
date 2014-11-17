@@ -1,6 +1,5 @@
-public/stylesheets/out.css
-node_modules
 mercer
 mercer.test
-bin/
 .DS_Store
+fabfile.pyc
+classifiers/Gemfile.lock
