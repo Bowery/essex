@@ -23,7 +23,7 @@ func main() {
 		new(web.SlashHandler),
 		new(web.CorsHandler),
 		&web.StatHandler{Key: config.StatHatKey, Name: "mercer"},
-	}, Routes)
+	}, routes)
 	server.Router.NotFoundHandler = &web.NotFoundHandler{renderer}
 	server.ListenAndServe()
 }
