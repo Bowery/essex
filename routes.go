@@ -101,15 +101,16 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 
 	cmds := &Commands{}
 	for language, weight := range languages {
-		lc := LanguageToCommands[language]
-		if lc == nil {
-			fmt.Println(language, "is not currently supported")
-			break
-		}
 		fmt.Println(language, "-", weight)
-		cmds.Start += lc.Start + "\n"
-		cmds.Build += lc.Build + "\n"
-		cmds.Init += lc.Init + "\n"
+		lc := LanguageToCommands[language]
+		if lc != nil {
+			cmds.Start += lc.Start + "\n"
+			cmds.Build += lc.Build + "\n"
+			cmds.Init += lc.Init + "\n"
+		} else {
+			fmt.Println(language, "is not currently supported")
+		}
+
 	}
 
 	renderer.JSON(rw, http.StatusOK, map[string]interface{}{
