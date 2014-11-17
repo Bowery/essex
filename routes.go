@@ -81,7 +81,8 @@ func AnalyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	linguistPath, _ := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "classifiers/language"))
+	// linguistPath, _ := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "classifiers", "language"))
+	linguistPath := filepath.Join("classifiers", "language")
 	linguistOut, err := exec.Command(linguistPath, analysisPath).Output()
 	if err != nil {
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
