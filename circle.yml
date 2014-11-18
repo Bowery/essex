@@ -1,3 +1,7 @@
+dependencies:
+  override:
+    - pip install fabric
+    - pip install requests
 test:
   override:
     - echo "No Tests... for now"
