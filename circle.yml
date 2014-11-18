@@ -1,0 +1,8 @@
+test:
+  override:
+    - echo "No Tests... for now"
+deployment:
+  production:
+    branch: master
+    commands:
+      - fab deploy

@@ -36,7 +36,7 @@ func init() {
 type mercerRes struct {
 	Status string `json:"status"`
 	Err    string `json:"error"`
-	Commands
+	commands
 }
 
 func newAnalyzeCodeRequest(url string) (*http.Request, error) {
@@ -61,7 +61,7 @@ func newAnalyzeCodeRequest(url string) (*http.Request, error) {
 }
 
 func TestAnalyzeCodeHandler(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(AnalyzeCodeHandler))
+	server := httptest.NewServer(http.HandlerFunc(analyzeCodeHandler))
 	defer server.Close()
 
 	req, err := newAnalyzeCodeRequest(server.URL)

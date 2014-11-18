@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -24,6 +25,9 @@ var routes = []web.Route{
 	{"GET", "/healthz", healthzHandler, false},
 	{"POST", "/code", analyzeCodeHandler, false},
 }
+
+// var linguistPath, _ = filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "classifiers", "language"))
+var linguistPath = filepath.Join("classifiers", "language")
 
 var renderer = render.New(render.Options{
 	IndentJSON:    true,
@@ -66,6 +70,7 @@ func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	analysisPath := filepath.Join(os.Getenv(sys.HomeVar), ".mercer", uuid.New())
 
 	if err = os.MkdirAll(analysisPath, os.ModePerm|os.ModeDir); err != nil {
+		log.Println(err)
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
@@ -74,6 +79,7 @@ func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := tar.Untar(tarball, analysisPath); err != nil {
+		log.Println(err)
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
@@ -81,10 +87,9 @@ func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// linguistPath, _ := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "classifiers", "language"))
-	linguistPath := filepath.Join("classifiers", "language")
 	linguistOut, err := exec.Command(linguistPath, analysisPath).Output()
 	if err != nil {
+		log.Println(linguistPath, err)
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
@@ -93,6 +98,7 @@ func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 	languages := map[string]interface{}{}
 	if err := json.Unmarshal(linguistOut, &languages); err != nil {
+		log.Println(err)
 		renderer.JSON(rw, http.StatusInternalServerError, map[string]string{
 			"status": requests.STATUS_FAILED,
 			"error":  err.Error(),
@@ -100,7 +106,7 @@ func analyzeCodeHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cmds := &commands{}
+	cmds := new(commands)
 	for language, weight := range languages {
 		fmt.Println(language, "-", weight)
 		lc := languageToCommands[language]
