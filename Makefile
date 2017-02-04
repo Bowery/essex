@@ -6,6 +6,7 @@ all: deps format
 
 deps:
 	@echo "--> Installing build dependencies"
+	@brew install icu4c cmake pkg-config
 	@cd classifiers && bundle install
 	@go get -d -v ./...
 	@echo $(DEPS) | xargs -n1 go get -d
